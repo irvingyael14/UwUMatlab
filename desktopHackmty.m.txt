@@ -1,0 +1,62 @@
+% Limpiar datos previos
+clear;
+clc;
+
+% Carga de datos
+dataGps = load('gpsLocation.mat');
+dataAcc = load('accLocation.mat');
+
+matrixGps = dataGps.nameFileGps;
+matrixAcc = dataAcc.nameFileAcc;
+
+lat_column = matrixGps(:,1);
+lon_column = matrixGps(:,2);
+positionTime_column = matrixGps(:,3);
+
+acc_column = matrixAcc(:,1);
+accTime_column = matrixAcc(:,2);
+
+finalMatrixAll = zeros(1,5)
+finalMatrix = zeros(1,2);
+
+limit = 10;
+
+fileID = fopen('output.txt', 'w');
+
+% Datos a enviar
+%data = struct;
+%data.location.type = 'Point';
+
+% URL de la API
+%url = 'http://localhost:3001/api/coordenadas';
+
+% Opciones para la solicitud POST
+%options = weboptions('ContentType', 'json', 'RequestMethod', 'post');
+
+
+for i=1:length(acc_column)
+    if limit <= acc_column(i)
+        for j=1:length(positionTime_column)
+            if accTime_column(i) == positionTime_column(j)
+                %disp(lat_column(j))
+                %disp(lon_column(j))
+                geoplot(lat_column(j), lon_column(j),"r+")
+                finalMatrixAll = [finalMatrixAll; lat_column(j) lon_column(j) positionTime_column(j) acc_column(i) accTime_column(i)];
+                finalMatrix = [finalMatrix; lat_column(j) lon_column(j)];
+                % Enviar datos
+                %data.location.coordinates = [lon_column(j), lat_column(j)];
+                %response = webwrite(url, data, options);
+            end
+        end
+    end
+end
+for i = 1:size(finalMatrix, 1)
+    % Crear una cadena de formato dinámico para las comas entre los valores
+    formatSpec = [repmat('%f,', 1, size(finalMatrix, 2)-1), '%f\n'];
+    
+    % Escribir la fila actual con valores separados por comas
+    fprintf(fileID, formatSpec, finalMatrix(i, :));
+end
+
+% Cerrar el archivo
+fclose(fileID);

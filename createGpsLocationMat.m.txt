@@ -1,0 +1,8 @@
+% Create .mat file
+%nameFileGps = cell(1, 7);
+%save('gpsLocation.mat','nameFileGps');
+save('gpsLocation.mat');
+
+%nameFileAcc = cell(1, 4);
+%save('accLocation.mat','nameFileAcc');
+save('accLocation.mat');

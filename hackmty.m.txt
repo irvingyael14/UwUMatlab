@@ -1,0 +1,106 @@
+clc;
+clear all;
+m.PositionSensorEnabled = 0;
+m.AccelerationSensrEnabled = 0;
+m.Logging = 0
+clear m;
+
+load('gpsLocation.mat');
+load('accLocation.mat');
+%nameFileGps = loadedData.nameFileGps;
+prompt = "Start the program";
+x = input(prompt)
+value = 1;
+n = 10;
+currentT = [];
+expectedInt = 1;
+tmul = 0;
+T = 0;
+PositionArray = zeros(1, 7);
+AccellerationArray = zeros(1, 2);
+timeGps = 0;
+timeAcc = 0;
+nameFileGps = zeros(1, 7);
+nameFileAcc = zeros(1, 2);
+
+if x == 1
+    m = mobiledev;
+    m.PositionSensorEnabled = 1;
+    m.AccelerationSensorEnabled = 1;
+    m.Logging = 1;
+    %for i = 1:n
+    while m.Logging ~= 0
+        tic
+        % y = [1, 2, 3];  % A vector
+        % scalarY = y(1);
+        [a, at] = accellog(m);
+        timeAcc = datetime;
+        if tmul >= expectedInt
+            [lat, lon, timestamp, speed, course, alt, horizacc] = poslog(m);
+            timeGps = datetime;
+            if isempty(lat)
+                lat = 0;
+            elseif isequal(size(lat), [2, 1])
+                lat = lat(end);
+            end
+            if isempty(lon)
+                lon = 0;
+            elseif isequal(size(lon), [2, 1])
+                lon = lon(end);
+            end
+            if isempty(timestamp)
+                timestamp = 0;
+            elseif isequal(size(timestamp), [2, 1])
+                timestamp = timestamp(end);
+            end
+            if isempty(speed)
+                speed = 0;
+            elseif isequal(size(speed), [2, 1])
+                speed = speed(end);
+            end
+            if isempty(course)
+                course = 0;
+            elseif isequal(size(course), [2, 1])
+                course = course(end);
+            end
+            if isempty(alt)
+                alt = 0;
+            elseif isequal(size(alt), [2, 1])
+                alt = alt(end);
+            end
+            if isempty(horizacc)
+                horizacc = 0;
+            elseif isequal(size(horizacc), [2, 1])
+                horizacc = horizacc(end);
+            end
+            segundos_GPS = (hour(timeGps) * 3600) + (minute(timeGps) * 60) + (floor(second(timeGps)));
+            positionSensor = [lat(end), lon(end), segundos_GPS, speed(end), course(end), alt(end), horizacc(end)];
+            PositionArray = [PositionArray; positionSensor];
+            nameFileGps = [nameFileGps; positionSensor];
+            expectedInt = expectedInt + 1;
+            [lat, lon, timestamp, speed, course, alt, horizacc] = deal([]);
+            save('gpsLocation.mat', 'nameFileGps','-append');
+        end
+        if isempty(a)
+                a = 0;
+        elseif isequal(size(a), [2, 1])
+                a = a(end);
+        end
+        if isempty(at)
+                at = 0;
+        elseif isequal(size(at), [2, 1])
+                at = at(end);
+        end
+        segundos_ACC = (hour(timeAcc) * 3600) + (minute(timeAcc) * 60) + (floor(second(timeAcc)));
+        accSensor = [a(end,1), segundos_ACC];
+        AccellerationArray = [AccellerationArray; accSensor];
+        nameFileAcc = [nameFileAcc; accSensor];
+        save('accLocation.mat', 'nameFileAcc','-append');
+        currentT = [currentT, T];
+        tmul = sum(currentT);
+        T = toc;
+    end
+end
+
+clear m
+
